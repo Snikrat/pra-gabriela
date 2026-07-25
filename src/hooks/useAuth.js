@@ -12,24 +12,29 @@ import {
 import { auth, googleProvider } from "../lib/firebase.js";
 import { isAllowedEmail, shouldUseAuthRedirect } from "../lib/rules.js";
 
+// garante a persistência ANTES de qualquer signIn — se o redirect (mobile)
+// sair da página antes disso terminar, o Firebase perde o resultado do
+// login ao voltar do Google e a pessoa cai de volta na tela de entrar
+const persistenceReady = (async () => {
+  try {
+    await setPersistence(auth, indexedDBLocalPersistence);
+  } catch {
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch {}
+  }
+})();
+
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        await setPersistence(auth, indexedDBLocalPersistence);
-      } catch {
-        try {
-          await setPersistence(auth, browserLocalPersistence);
-        } catch {}
-      }
-    })();
-
-    getRedirectResult(auth).catch((e) => {
-      console.warn("redirect result error:", e);
+    persistenceReady.then(() => {
+      getRedirectResult(auth).catch((e) => {
+        console.warn("redirect result error:", e);
+      });
     });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -57,6 +62,7 @@ export function useAuth() {
   async function login() {
     setLoggingIn(true);
     try {
+      await persistenceReady;
       if (shouldUseAuthRedirect()) {
         await signInWithRedirect(auth, googleProvider);
         return;
