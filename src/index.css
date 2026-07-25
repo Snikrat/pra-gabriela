@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* mantém os nomes --noteX pois post-its já salvos no Firestore guardam
+     color: "var(--noteA)" etc literalmente (dado legado, não pode mudar) */
+  :root {
+    --noteA: #fff3a8;
+    --noteB: #c6ffbf;
+    --noteC: #bfe6ff;
+    --noteD: #ffc7e7;
+  }
+
+
+  html,
+  body {
+    @apply m-0 min-h-[100svh] overflow-x-hidden font-sans text-ink;
+  }
+
+  body.modalOpen {
+    @apply overflow-hidden;
+  }
+}

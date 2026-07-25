@@ -1,0 +1,38 @@
+rules_version = '2';
+
+// Regras pra "pra gabriela": um documento compartilhado por dia, dentro de
+// shared/pra-gabriela-shared/days/{dayKey}, acessível só pelos dois e-mails
+// permitidos (mesma allowlist do app em src/lib/rules.js).
+//
+// Observação importante: os post-its de cada dia ficam num array dentro do
+// próprio documento (não numa subcoleção), então o Firestore não consegue
+// validar por regra "só o autor apaga a própria nota em até 1h" — isso hoje
+// é responsabilidade do client (ver canDeleteNote/deletePostItFromDay). Se
+// no futuro quiser essa garantia no servidor, o caminho é mover cada nota
+// pra um documento próprio numa subcoleção "notes".
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAllowedEmail() {
+      return isSignedIn() &&
+        request.auth.token.email != null &&
+        request.auth.token.email.lower() in [
+          "felippe.santosffx@gmail.com",
+          "gabrielagoncalves133@gmail.com"
+        ];
+    }
+
+    match /shared/{sharedId}/days/{dayKey} {
+      allow read, write: if isAllowedEmail();
+    }
+
+    // nega tudo mais por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
