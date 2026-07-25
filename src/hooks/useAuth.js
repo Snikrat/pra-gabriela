@@ -31,13 +31,20 @@ export function useAuth() {
   const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
+    console.log("[auth] boot, persistence pending...");
     persistenceReady.then(() => {
-      getRedirectResult(auth).catch((e) => {
-        console.warn("redirect result error:", e);
-      });
+      console.log("[auth] persistence ready, checking redirect result...");
+      getRedirectResult(auth)
+        .then((result) => {
+          console.log("[auth] getRedirectResult ->", result ? `user ${result.user?.email}` : "null (sem redirect pendente)");
+        })
+        .catch((e) => {
+          console.error("[auth] getRedirectResult ERROR ->", e?.code, e?.message, e);
+        });
     });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
+      console.log("[auth] onAuthStateChanged ->", u ? u.email : "null");
       if (!u) {
         setUser(null);
         setReady(true);
@@ -64,13 +71,15 @@ export function useAuth() {
     try {
       await persistenceReady;
       if (shouldUseAuthRedirect()) {
+        console.log("[auth] iniciando signInWithRedirect...");
         await signInWithRedirect(auth, googleProvider);
         return;
       }
+      console.log("[auth] iniciando signInWithPopup...");
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
-      console.error(e);
-      alert("não consegui abrir o login. se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.");
+      console.error("[auth] login ERROR ->", e?.code, e?.message, e);
+      alert(`não consegui abrir o login (${e?.code || "erro"}). se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.`);
     } finally {
       setLoggingIn(false);
     }
