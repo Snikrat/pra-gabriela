@@ -10,7 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase.js";
-import { isAllowedEmail, shouldUseAuthRedirect } from "../lib/rules.js";
+import { isAllowedEmail } from "../lib/rules.js";
 
 // garante a persistência ANTES de qualquer signIn — se o redirect (mobile)
 // sair da página antes disso terminar, o Firebase perde o resultado do
@@ -77,15 +77,24 @@ export function useAuth() {
     setLoggingIn(true);
     try {
       await persistenceReady;
-      if (shouldUseAuthRedirect()) {
-        log("iniciando signInWithRedirect...");
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
       log("iniciando signInWithPopup...");
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      log(`signInWithPopup OK -> ${result.user?.email}`);
     } catch (e) {
       log(`login ERRO -> ${e?.code || ""} ${e?.message || e}`);
+
+      // fallback: ambientes que bloqueiam popup (webview de app tipo
+      // whatsapp/instagram) — aí sim precisa do redirect
+      if (e?.code === "auth/popup-blocked" || e?.code === "auth/operation-not-supported-in-this-environment") {
+        try {
+          log("popup bloqueado, tentando signInWithRedirect...");
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (e2) {
+          log(`signInWithRedirect ERRO -> ${e2?.code || ""} ${e2?.message || e2}`);
+        }
+      }
+
       alert(`não consegui abrir o login (${e?.code || "erro"}). se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.`);
     } finally {
       setLoggingIn(false);

@@ -109,20 +109,3 @@ export function escapeHtml(str) {
 }
 
 export const NOTE_COLORS = ["var(--noteA)", "var(--noteB)", "var(--noteC)", "var(--noteD)"];
-
-export function isMobileAndroid() {
-  return /Android/i.test(navigator.userAgent || "");
-}
-
-export function isIOS() {
-  const ua = navigator.userAgent || "";
-  // iPadOS 13+ se identifica como Mac, mas com suporte a touch
-  const isIpadOS = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
-  return /iPhone|iPad|iPod/i.test(ua) || isIpadOS;
-}
-
-// popup de login costuma ser bloqueado nesses ambientes (Android WebView,
-// Safari/iOS com ITP) — redirect é o caminho confiável neles
-export function shouldUseAuthRedirect() {
-  return isMobileAndroid() || isIOS();
-}
