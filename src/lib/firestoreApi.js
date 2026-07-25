@@ -105,13 +105,18 @@ export async function listDaysPage({ pageSize = JAR_PAGE_SIZE, cursorKey = null,
  * dias vazios.
  */
 export async function listQualifyingDaysPage({ pageSize = JAR_PAGE_SIZE, cursorKey = null, sortOrder = "desc" } = {}) {
-  const MAX_FETCHES = 8;
+  // busca um lote bem maior que o pageSize por vez — reduz o número de
+  // idas e vindas sequenciais ao banco quando há muitos dias vazios
+  // (ex: dias em que o app foi aberto mas ninguém escreveu nada) entre
+  // os dias que realmente têm post-its
+  const RAW_BATCH = Math.max(pageSize * 4, 80);
+  const MAX_FETCHES = 6;
   const qualifying = [];
   let cursor = cursorKey;
   let hasMore = true;
 
   for (let i = 0; i < MAX_FETCHES && qualifying.length < pageSize && hasMore; i++) {
-    const page = await listDaysPage({ pageSize, cursorKey: cursor, sortOrder });
+    const page = await listDaysPage({ pageSize: RAW_BATCH, cursorKey: cursor, sortOrder });
     hasMore = page.hasMore;
     cursor = page.nextCursor;
 

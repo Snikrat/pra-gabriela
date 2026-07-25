@@ -102,3 +102,11 @@ export function formatDayPretty(key) {
     year: "numeric",
   });
 }
+
+// versão curta (dd/mm/aa) — usada onde o texto completo do formatDayPretty
+// não cabe (ex: título do header em cima dos botões)
+export function formatDayShort(key) {
+  const [y, m, d] = String(key || "").split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${String(y).slice(-2)}`;
+}

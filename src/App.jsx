@@ -5,7 +5,7 @@ import { useConfirm } from "./hooks/useConfirm.js";
 import {
   getZonedPartsSP,
   zonedToUtcEpochSP,
-  formatDayPretty,
+  formatDayShort,
   TZ,
 } from "./lib/time.js";
 import { firstNameFromUser, canDeleteNote, canEditNote } from "./lib/rules.js";
@@ -77,7 +77,7 @@ export default function App() {
     month: "long",
   });
   const headline = archiveItem
-    ? formatDayPretty(archiveItem.key)
+    ? formatDayShort(archiveItem.key)
     : greeting(p.hour) + "🤍";
 
   function handleEnvelopeOpen() {

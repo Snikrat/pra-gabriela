@@ -1,4 +1,4 @@
-import { creatorLabel } from "../lib/rules.js";
+import { creatorLabel, NOTE_COLORS } from "../lib/rules.js";
 import { formatDayPretty } from "../lib/time.js";
 
 export default function DayModal({
@@ -59,7 +59,8 @@ export default function DayModal({
             return (
               <div
                 key={n.id || i}
-                className="rounded-xl border border-pink/18 bg-pink/8 p-2.5 text-xs"
+                style={{ background: n.color || NOTE_COLORS[i % NOTE_COLORS.length] }}
+                className="rounded-xl border border-black/5 p-2.5 text-xs"
               >
                 <h4 className="m-0 mb-1 text-[13px]">{n.title || ""}</h4>
                 <div dangerouslySetInnerHTML={{ __html: n.text || "" }} />
