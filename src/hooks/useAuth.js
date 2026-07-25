@@ -29,28 +29,15 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
-  const [debugLog, setDebugLog] = useState([]);
-
-  function log(msg) {
-    console.log("[auth]", msg);
-    setDebugLog((cur) => [...cur, `${new Date().toLocaleTimeString("pt-BR")} — ${msg}`]);
-  }
 
   useEffect(() => {
-    log("boot, aguardando persistência...");
     persistenceReady.then(() => {
-      log("persistência pronta, checando resultado de redirect...");
-      getRedirectResult(auth)
-        .then((result) => {
-          log(result ? `getRedirectResult -> usuário ${result.user?.email}` : "getRedirectResult -> null (sem redirect pendente)");
-        })
-        .catch((e) => {
-          log(`getRedirectResult ERRO -> ${e?.code || ""} ${e?.message || e}`);
-        });
+      getRedirectResult(auth).catch((e) => {
+        console.warn("redirect result error:", e);
+      });
     });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
-      log(`onAuthStateChanged -> ${u ? u.email : "null"}`);
       if (!u) {
         setUser(null);
         setReady(true);
@@ -70,32 +57,28 @@ export function useAuth() {
     });
 
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function login() {
     setLoggingIn(true);
     try {
       await persistenceReady;
-      log("iniciando signInWithPopup...");
-      const result = await signInWithPopup(auth, googleProvider);
-      log(`signInWithPopup OK -> ${result.user?.email}`);
+      await signInWithPopup(auth, googleProvider);
     } catch (e) {
-      log(`login ERRO -> ${e?.code || ""} ${e?.message || e}`);
+      console.error(e);
 
       // fallback: ambientes que bloqueiam popup (webview de app tipo
       // whatsapp/instagram) — aí sim precisa do redirect
       if (e?.code === "auth/popup-blocked" || e?.code === "auth/operation-not-supported-in-this-environment") {
         try {
-          log("popup bloqueado, tentando signInWithRedirect...");
           await signInWithRedirect(auth, googleProvider);
           return;
         } catch (e2) {
-          log(`signInWithRedirect ERRO -> ${e2?.code || ""} ${e2?.message || e2}`);
+          console.error(e2);
         }
       }
 
-      alert(`não consegui abrir o login (${e?.code || "erro"}). se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.`);
+      alert("não consegui abrir o login. se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.");
     } finally {
       setLoggingIn(false);
     }
@@ -105,5 +88,5 @@ export function useAuth() {
     await signOut(auth);
   }
 
-  return { user, ready, loggingIn, login, logout, debugLog };
+  return { user, ready, loggingIn, login, logout };
 }

@@ -29,7 +29,7 @@ function greeting(hour) {
 }
 
 export default function App() {
-  const { user, ready, loggingIn, login, logout, debugLog } = useAuth();
+  const { user, ready, loggingIn, login, logout } = useAuth();
   const today = useTodayNotes(user);
   const confirm = useConfirm();
 
@@ -239,7 +239,7 @@ export default function App() {
 
   return (
     <>
-      {ready && <AuthGate show={!user} loggingIn={loggingIn} onLogin={login} debugLog={debugLog} />}
+      {ready && <AuthGate show={!user} loggingIn={loggingIn} onLogin={login} />}
 
       {showApp && (
         <UserBar

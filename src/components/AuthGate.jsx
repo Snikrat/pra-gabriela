@@ -1,4 +1,4 @@
-export default function AuthGate({ show, loggingIn, onLogin, debugLog }) {
+export default function AuthGate({ show, loggingIn, onLogin }) {
   return (
     <div
       className={
@@ -37,14 +37,6 @@ export default function AuthGate({ show, loggingIn, onLogin, debugLog }) {
         </button>
 
         <p className="mt-3.5 mb-0 text-center text-xs tracking-[.15px] text-[rgba(60,60,80,.55)]">i will follow you</p>
-
-        {debugLog && debugLog.length > 0 && (
-          <div className="mt-3.5 max-h-[160px] overflow-y-auto rounded-xl bg-black/85 p-2.5 text-left font-mono text-[10px] leading-[1.5] text-lime-300">
-            {debugLog.map((line, i) => (
-              <div key={i}>{line}</div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
