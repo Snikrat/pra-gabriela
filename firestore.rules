@@ -4,6 +4,10 @@ rules_version = '2';
 // shared/pra-gabriela-shared/days/{dayKey}, acessível só pelos dois e-mails
 // permitidos (mesma allowlist do app em src/lib/rules.js).
 //
+// Este arquivo reflete o que está de fato publicado no Firebase Console —
+// mantenha os dois sincronizados manualmente (não há firebase.json/CLI
+// configurado neste projeto pra fazer deploy automático daqui).
+//
 // Observação importante: os post-its de cada dia ficam num array dentro do
 // próprio documento (não numa subcoleção), então o Firestore não consegue
 // validar por regra "só o autor apaga a própria nota em até 1h" — isso hoje
@@ -18,16 +22,41 @@ service cloud.firestore {
     }
 
     function isAllowedEmail() {
-      return isSignedIn() &&
-        request.auth.token.email != null &&
-        request.auth.token.email.lower() in [
+      return isSignedIn()
+        && request.auth.token.email in [
           "felippe.santosffx@gmail.com",
           "gabrielagoncalves133@gmail.com"
         ];
     }
 
-    match /shared/{sharedId}/days/{dayKey} {
-      allow read, write: if isAllowedEmail();
+    function isDayKey(k) {
+      return k.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    // permite listar a coleção (queries/getDocs, usado pelo potinho)
+    match /shared/pra-gabriela-shared/days {
+      allow list: if isAllowedEmail();
+    }
+
+    match /shared/pra-gabriela-shared/days/{dayKey} {
+
+      // lê qualquer doc da coleção (evita query quebrar por doc antigo fora do padrão)
+      allow get, read: if isAllowedEmail();
+
+      // não deixa apagar o documento do dia inteiro
+      allow delete: if false;
+
+      // cria/atualiza: valida formato da chave e o shape exato do documento
+      allow create, update: if isAllowedEmail()
+        && isDayKey(dayKey)
+        && request.resource.data.key == dayKey
+        && request.resource.data.keys().hasOnly([
+          "key", "notes", "revealedBy", "savedAt"
+        ])
+        && request.resource.data.notes is list
+        && request.resource.data.revealedBy is map
+        && request.resource.data.notes.size() <= 300
+        && request.resource.data.revealedBy.size() <= 50;
     }
 
     // nega tudo mais por padrão
