@@ -29,22 +29,28 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
+  const [debugLog, setDebugLog] = useState([]);
+
+  function log(msg) {
+    console.log("[auth]", msg);
+    setDebugLog((cur) => [...cur, `${new Date().toLocaleTimeString("pt-BR")} — ${msg}`]);
+  }
 
   useEffect(() => {
-    console.log("[auth] boot, persistence pending...");
+    log("boot, aguardando persistência...");
     persistenceReady.then(() => {
-      console.log("[auth] persistence ready, checking redirect result...");
+      log("persistência pronta, checando resultado de redirect...");
       getRedirectResult(auth)
         .then((result) => {
-          console.log("[auth] getRedirectResult ->", result ? `user ${result.user?.email}` : "null (sem redirect pendente)");
+          log(result ? `getRedirectResult -> usuário ${result.user?.email}` : "getRedirectResult -> null (sem redirect pendente)");
         })
         .catch((e) => {
-          console.error("[auth] getRedirectResult ERROR ->", e?.code, e?.message, e);
+          log(`getRedirectResult ERRO -> ${e?.code || ""} ${e?.message || e}`);
         });
     });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
-      console.log("[auth] onAuthStateChanged ->", u ? u.email : "null");
+      log(`onAuthStateChanged -> ${u ? u.email : "null"}`);
       if (!u) {
         setUser(null);
         setReady(true);
@@ -64,6 +70,7 @@ export function useAuth() {
     });
 
     return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function login() {
@@ -71,14 +78,14 @@ export function useAuth() {
     try {
       await persistenceReady;
       if (shouldUseAuthRedirect()) {
-        console.log("[auth] iniciando signInWithRedirect...");
+        log("iniciando signInWithRedirect...");
         await signInWithRedirect(auth, googleProvider);
         return;
       }
-      console.log("[auth] iniciando signInWithPopup...");
+      log("iniciando signInWithPopup...");
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
-      console.error("[auth] login ERROR ->", e?.code, e?.message, e);
+      log(`login ERRO -> ${e?.code || ""} ${e?.message || e}`);
       alert(`não consegui abrir o login (${e?.code || "erro"}). se estiver em app (whatsapp/instagram), tenta 'abrir no chrome'.`);
     } finally {
       setLoggingIn(false);
@@ -89,5 +96,5 @@ export function useAuth() {
     await signOut(auth);
   }
 
-  return { user, ready, loggingIn, login, logout };
+  return { user, ready, loggingIn, login, logout, debugLog };
 }
