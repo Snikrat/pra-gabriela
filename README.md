@@ -1,6 +1,6 @@
 # pra gabriela 🤍
 
-> um envelope, uma carta, e um potinho cheio de post-its — feito com carinho pra ter sempre um lembrete de que tem alguém do seu lado.
+> um envelope, uma carta, e um potinho cheio de post-its, feito com carinho pra ter sempre um lembrete de que tem alguém do seu lado.
 
 ---
 
